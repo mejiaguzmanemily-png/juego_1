@@ -1,0 +1,314 @@
+# ==========================================
+# PROYECTO: La Fábrica de Arreglos (Valores con Propósito)
+# Curso de Introducción a la Programación
+# ==========================================
+
+# 1. Código HTML/JavaScript sin revelar el índice esperado
+codigo_html = """<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>La Fábrica de Arreglos - Aprende Programación</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.8); }
+        }
+        .selected-glow { animation: pulse-glow 1.5s infinite; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-anim { animation: fadeIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col items-center justify-center min-h-screen font-sans p-4 selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- Modal de Explicación / Bienvenida al Juego -->
+    <div id="modal-instrucciones" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-700 p-6 md:p-8 rounded-3xl max-w-lg w-full shadow-2xl modal-anim relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 to-cyan-500"></div>
+            
+            <div class="text-3xl mb-3 text-center">🏭</div>
+            <h2 class="text-xl md:text-2xl font-bold text-amber-400 text-center mb-2">Bienvenido a La Fábrica de Arreglos</h2>
+            <p class="text-slate-300 text-xs md:text-sm text-center mb-6">Aprende cómo funcionan las estructuras de datos (Arrays) y los índices de forma interactiva.</p>
+
+            <div class="space-y-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-800 text-xs text-slate-300 mb-6">
+                <div class="flex items-start gap-2.5">
+                    <span class="text-cyan-400 font-bold text-sm">1.</span>
+                    <p><strong>¿Qué es un Arreglo?</strong> Es una cinta transportadora dividida en casillas ordenadas donde guardamos información.</p>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="text-cyan-400 font-bold text-sm">2.</span>
+                    <p><strong>El secreto del Índice [0]:</strong> En programación, siempre empezamos a contar las casillas desde el número <strong>0</strong>, no desde el 1.</p>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <span class="text-cyan-400 font-bold text-sm">3.</span>
+                    <p><strong>Tu Misión:</strong> Lee la descripción del operador logístico, deduce el índice correcto y coloca el objeto en la casilla exacta de la cinta.</p>
+                </div>
+            </div>
+
+            <button onclick="cerrarModal()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-amber-500/20 cursor-pointer">
+                ¡Entendido, a Jugar! 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenedor Principal del Juego -->
+    <div class="bg-slate-900/90 backdrop-blur-md p-6 md:p-8 rounded-3xl shadow-2xl max-w-4xl w-full border border-slate-800 relative overflow-hidden">
+        
+        <!-- Detalle decorativo superior tipo fábrica -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-cyan-500 to-indigo-500"></div>
+
+        <!-- Encabezado Principal -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-800 pb-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-amber-400 flex items-center gap-2">
+                    <span>🏭</span> La Fábrica de Arreglos
+                </h1>
+                <p class="text-slate-400 text-xs md:text-sm mt-1">Domina la asignación de elementos por índice en memoria.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="abrirModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold rounded-full transition cursor-pointer flex items-center gap-1">
+                    <span>❓</span> Ayuda / Guía
+                </button>
+                <div id="badge-nivel" class="px-4 py-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold rounded-full shadow-inner">
+                    ⚡ Nivel 1
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de Progreso del Nivel -->
+        <div class="mb-4 flex items-center justify-between text-xs text-slate-400 font-medium">
+            <span id="texto-progreso">Progreso del nivel: 0 / 4 objetos colocados</span>
+            <div class="w-40 bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div id="barra-progreso" class="bg-amber-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+        </div>
+
+        <!-- Cinta Transportadora (Contenedor Dinámico) -->
+        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 mb-6 shadow-inner relative">
+            <div class="text-center text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wider flex items-center justify-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Cinta Transportadora Activa (Memoria RAM)
+            </div>
+            <div class="flex justify-center flex-wrap gap-2.5 md:gap-3" id="cinta">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Panel de Reto Actual -->
+        <div class="bg-gradient-to-br from-slate-950 to-slate-900 p-5 rounded-2xl mb-6 border border-cyan-500/20 shadow-lg relative">
+            <div class="absolute -top-2.5 left-4 bg-cyan-500 text-slate-950 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full tracking-wider">
+                Misión del Operador
+            </div>
+            <h2 id="titulo-reto" class="text-sm md:text-base font-bold text-cyan-300 mb-1 mt-1">Cargando instrucción...</h2>
+            <p id="desc-valor" class="text-xs md:text-sm text-slate-300 italic">"..."</p>
+        </div>
+
+        <!-- Depósito / Banco de Objetos -->
+        <div class="mb-2">
+            <p class="text-xs text-slate-400 mb-3 font-semibold flex items-center gap-1.5">
+                <span>📦</span> Suministros Disponibles (Haz clic para seleccionar el objeto que pide la misión):
+            </p>
+            <div id="banco-objetos" class="flex flex-wrap justify-center gap-3">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Mensajes de Estado -->
+        <p id="mensaje" class="mt-4 text-sm font-semibold text-center h-6 transition-all duration-300"></p>
+    </div>
+
+    <script>
+        // Definición de los 3 niveles con sus retos correspondientes
+        let niveles = [
+            {
+                id: 0,
+                nombre: "Nivel 1: 4 Casillas / 4 Objetos",
+                tamanoArreglo: 4, 
+                retos: [
+                    { posCorrecta: 0, valorCorrecto: "0", nombreValor: "El valor numérico '0'", descripcion: "Punto de partida: Primer elemento absoluto del arreglo, ubicado estrictamente en el índice inicial [0]." },
+                    { posCorrecta: 1, valorCorrecto: "⚡", nombreValor: "El indicador '⚡'", descripcion: "Energía inicial: Activa la primera zona de transferencia justo después del inicio." },
+                    { posCorrecta: 2, valorCorrecto: "📦", nombreValor: "El paquete '📦'", descripcion: "Unidad central: Carga principal que se procesa a mitad del tramo inicial." },
+                    { posCorrecta: 3, valorCorrecto: "⭐", nombreValor: "La estrella '⭐'", descripcion: "Sello de calidad: Ubicado en la última posición del primer bloque de casillas." }
+                ]
+            },
+            {
+                id: 1,
+                nombre: "Nivel 2: 6 Casillas / 6 Objetos",
+                tamanoArreglo: 6, 
+                retos: [
+                    { posCorrecta: 0, valorCorrecto: "🔋", nombreValor: "La batería '🔋'", descripcion: "Fuente principal: Alimenta el arranque general del sistema desde el principio." },
+                    { posCorrecta: 1, valorCorrecto: "💻", nombreValor: "La terminal '💻'", descripcion: "Consola de control: Monitorea los datos justo en el primer paso operativo." },
+                    { posCorrecta: 2, valorCorrecto: "🔧", nombreValor: "La llave '🔧'", descripcion: "Herramienta de ajuste fino colocada con precisión en la zona media-baja." },
+                    { posCorrecta: 3, valorCorrecto: "⚙️", nombreValor: "El engranaje '⚙️'", descripcion: "Mecanismo central de transmisión que equilibra la mitad de la cinta." },
+                    { posCorrecta: 4, valorCorrecto: "📌", nombreValor: "El marcador '📌'", descripcion: "Bandera de control avanzado fijada un paso antes del cierre intermedio." },
+                    { posCorrecta: 5, valorCorrecto: "🎯", nombreValor: "La diana '🎯'", descripcion: "Objetivo alcanzado que cierra este tramo intermedio en la última casilla." }
+                ]
+            },
+            {
+                id: 2,
+                nombre: "Nivel 3: 8 Casillas / 8 Objetos",
+                tamanoArreglo: 8, 
+                retos: [
+                    { posCorrecta: 0, valorCorrecto: "🌱", nombreValor: "La semilla '🌱'", descripcion: "Inicio absoluto de la gran cadena de producción en la primera casilla." },
+                    { posCorrecta: 1, valorCorrecto: "💧", nombreValor: "La gota '💧'", descripcion: "Flujo de enfriamiento del sistema asignado al segundo espacio de la cinta." },
+                    { posCorrecta: 2, valorCorrecto: "☀️", nombreValor: "El sol '☀️'", descripcion: "Panel de energía solar auxiliar ubicado en el tercer compartimento." },
+                    { posCorrecta: 3, valorCorrecto: "🧪", nombreValor: "El tubo '🧪'", descripcion: "Muestra química de prueba analizada a un cuarto de la línea avanzada." },
+                    { posCorrecta: 4, valorCorrecto: "🔬", nombreValor: "El lente '🔬'", descripcion: "Estación de inspección microscópica fijada exactamente a mitad del tramo largo." },
+                    { posCorrecta: 5, valorCorrecto: "🛡️", nombreValor: "El escudo '🛡️'", descripcion: "Filtro de seguridad avanzado operativo en el sexto espacio de la cinta." },
+                    { posCorrecta: 6, valorCorrecto: "💎", nombreValor: "El cristal '💎'", descripcion: "Material de alta pureza procesado antes de llegar al final del recorrido." },
+                    { posCorrecta: 7, valorCorrecto: "🚀", nombreValor: "El cohete '🚀'", descripcion: "Despacho final y lanzamiento orbital ubicado en la última casilla del sistema." }
+                ]
+            }
+        ];
+
+        let nivelActualIndex = 0;
+        let retoActualIndex = 0; 
+        let arreglo = []; 
+        let objetoSeleccionado = null;
+
+        function cerrarModal() {
+            document.getElementById("modal-instrucciones").style.display = "none";
+        }
+
+        function abrirModal() {
+            document.getElementById("modal-instrucciones").style.display = "flex";
+        }
+
+        function iniciarNivel() {
+            let nivel = niveles[nivelActualIndex];
+            arreglo = new Array(nivel.tamanoArreglo).fill("");
+            document.getElementById("badge-nivel").innerHTML = `⚡ Nivel ${nivelActualIndex + 1}`;
+            actualizarVista();
+        }
+
+        function seleccionarObjeto(valor) {
+            objetoSeleccionado = valor;
+            actualizarBanco();
+            let msg = document.getElementById("mensaje");
+            msg.className = "mt-4 text-sm font-semibold text-cyan-400 text-center animate-pulse";
+            msg.innerText = `👉 Objeto seleccionado: [ ${valor} ]. ¡Ahora haz clic en la casilla correcta de la cinta!`;
+        }
+
+        function actualizarBanco() {
+            let banco = document.getElementById("banco-objetos");
+            banco.innerHTML = "";
+            
+            let nivel = niveles[nivelActualIndex];
+            let objetosNivel = nivel.retos.map(r => r.valorCorrecto);
+
+            objetosNivel.forEach(val => {
+                let isSelected = (objetoSeleccionado === val);
+                let selectedClass = isSelected 
+                    ? "border-amber-400 bg-amber-500/20 scale-110 shadow-lg ring-2 ring-amber-400 selected-glow" 
+                    : "border-slate-800 bg-slate-900 hover:border-slate-600 hover:bg-slate-800";
+                
+                banco.innerHTML += `
+                    <button onclick="seleccionarObjeto('${val}')" class="w-14 h-14 md:w-16 md:h-16 border-2 rounded-2xl flex items-center justify-center text-2xl md:text-3xl transition-all duration-200 cursor-pointer ${selectedClass}">
+                        ${val}
+                    </button>
+                `;
+            });
+        }
+
+        function actualizarVista() {
+            let contenedor = document.getElementById("cinta");
+            contenedor.innerHTML = "";
+
+            let nivel = niveles[nivelActualIndex];
+
+            for (let i = 0; i < nivel.tamanoArreglo; i++) {
+                let contenidoCasilla = arreglo[i] !== "" ? arreglo[i] : "";
+                let casillaClass = arreglo[i] !== "" 
+                    ? "bg-slate-900 border-amber-500/60 text-amber-300 shadow-md shadow-amber-500/10" 
+                    : "bg-slate-950/60 border-slate-700/80 hover:border-cyan-400 hover:bg-slate-900 cursor-pointer hover:shadow-cyan-500/20 hover:shadow-lg";
+                
+                contenedor.innerHTML += `
+                    <div class="flex flex-col items-center">
+                        <div onclick="colocarEnCasilla(${i})" class="w-12 h-14 md:w-15 md:h-18 border-2 ${casillaClass} rounded-xl flex items-center justify-center text-xl md:text-2xl transition-all duration-200">
+                            ${contenidoCasilla}
+                        </div>
+                        <span class="text-[10px] md:text-xs font-mono text-slate-400 mt-1.5 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">[${i}]</span>
+                    </div>
+                `;
+            }
+
+            let totalRetos = nivel.retos.length;
+            let porcentaje = (retoActualIndex / totalRetos) * 100;
+            document.getElementById("texto-progreso").innerText = `Progreso del nivel: ${retoActualIndex} / ${totalRetos} objetos colocados`;
+            document.getElementById("barra-progreso").style.width = `${porcentaje}%`;
+
+            if (retoActualIndex < nivel.retos.length) {
+                let r = nivel.retos[retoActualIndex];
+                // Título limpio sin revelar el número de la casilla directamente
+                document.getElementById("titulo-reto").innerText = `Coloca el objeto: ${r.nombreValor}`;
+                document.getElementById("desc-valor").innerText = `"${r.descripcion}"`;
+            }
+            
+            actualizarBanco();
+        }
+
+        function colocarEnCasilla(pos) {
+            let msg = document.getElementById("mensaje");
+            let nivel = niveles[nivelActualIndex];
+
+            if (!objetoSeleccionado) {
+                msg.className = "mt-4 text-sm font-semibold text-amber-400 text-center";
+                msg.innerText = "⚠️ ¡Atención! Primero debes seleccionar un objeto del depósito inferior.";
+                return;
+            }
+
+            let r = nivel.retos[retoActualIndex];
+
+            if (pos === r.posCorrecta && objetoSeleccionado === r.valorCorrecto) {
+                arreglo[pos] = objetoSeleccionado;
+                msg.className = "mt-4 text-sm font-semibold text-emerald-400 text-center";
+                msg.innerText = `✅ ¡Correcto! ${r.nombreValor} ubicado en el índice [${pos}].`;
+                objetoSeleccionado = null;
+                retoActualIndex++;
+
+                setTimeout(() => {
+                    msg.innerText = "";
+                    if (retoActualIndex >= nivel.retos.length) {
+                        if (nivelActualIndex < niveles.length - 1) {
+                            nivelActualIndex++;
+                            retoActualIndex = 0;
+                            msg.className = "mt-4 text-sm font-semibold text-amber-400 text-center";
+                            msg.innerText = `🚀 ¡Nivel superado! Avanzando a la siguiente línea de producción...`;
+                            setTimeout(() => {
+                                msg.innerText = "";
+                                iniciarNivel();
+                            }, 2200);
+                        } else {
+                            document.getElementById("titulo-reto").innerText = "🎉 ¡Fábrica Automatizada al 100%!";
+                            document.getElementById("desc-valor").innerText = "¡Felicidades! Has completado con éxito todos los niveles y dominado los arreglos de 4, 6 y 8 posiciones.";
+                            document.getElementById("banco-objetos").parentElement.style.display = "none";
+                            document.getElementById("barra-progreso").style.width = "100%";
+                            document.getElementById("texto-progreso").innerText = "¡Juego Completado!";
+                        }
+                    } else {
+                        actualizarVista();
+                    }
+                }, 1500);
+            } else {
+                msg.className = "mt-4 text-sm font-semibold text-rose-400 text-center animate-bounce";
+                msg.innerText = "❌ Incorrecto. Ese objeto no corresponde a esta casilla o índice.";
+            }
+        }
+
+        // Iniciar juego en el Nivel 1
+        iniciarNivel();
+    </script>
+</body>
+</html>
+"""
+
+# 2. Guardar el archivo index.html en la computadora
+nombre_archivo = "index.html"
+with open(nombre_archivo, "w", encoding="utf-8") as archivo:
+    archivo.write(codigo_html)
+
+print(f"¡Éxito! El archivo '{nombre_archivo}' ha sido generado sin revelar el índice esperado.")
